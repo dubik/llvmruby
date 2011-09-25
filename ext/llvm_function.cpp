@@ -9,7 +9,7 @@ llvm_function_wrap(Function *f) {
 
 VALUE 
 llvm_function_create_block(VALUE self) {
-  BasicBlock *bb = BasicBlock::Create("bb", LLVM_FUNCTION(self));
+  BasicBlock *bb = BasicBlock::Create(getGlobalContext(), "bb", LLVM_FUNCTION(self));
   return llvm_basic_block_wrap(bb);
 }
 
@@ -27,10 +27,11 @@ llvm_function_arguments(VALUE self) {
 
 VALUE
 llvm_function_inspect(VALUE self) {
-  Function *f = LLVM_FUNCTION(self); 
-  std::ostringstream strstrm;
+  Function *f = LLVM_FUNCTION(self);
+  std::string str;
+  raw_string_ostream strstrm(str);
   strstrm << *f;
-  return rb_str_new2(strstrm.str().c_str());
+  return rb_str_new2(str.c_str());
 }
 
 VALUE

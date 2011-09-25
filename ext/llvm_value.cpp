@@ -12,8 +12,9 @@ llvm_value_name(VALUE self) {
   Data_Get_Struct(self, Value, v);
 
   if(v->hasName()) {
-    const char *name = v->getNameStart();
-    int len = v->getNameLen();
+	StringRef nameRef = v->getName();
+    const char *name = nameRef.data();
+    int len = nameRef.size();
     return rb_str_new(name, len);
   } else {
     return Qnil;
@@ -24,7 +25,8 @@ VALUE
 llvm_value_set_name(VALUE self, VALUE rname) {
   Value *v;
   Data_Get_Struct(self, Value, v);
-  v->setName(RSTRING_PTR(rname), RSTRING_LEN(rname));
+  // StringRef would be more effifient but who knows if this string is going to be destroyed?
+  v->setName(std::string(RSTRING_PTR(rname), RSTRING_LEN(rname)));
   return rname; 
 }
 
@@ -71,18 +73,18 @@ llvm_value_get_constant(VALUE self, VALUE type, VALUE v) {
 VALUE 
 llvm_value_get_float_constant(VALUE self, VALUE v) {
 #if defined(RFLOAT_VALUE)
-  return llvm_value_wrap(ConstantFP::get(Type::FloatTy, RFLOAT_VALUE(v)));
+  return llvm_value_wrap(ConstantFP::get(Type::getFloatTy(getGlobalContext()), RFLOAT_VALUE(v)));
 #else
-  return llvm_value_wrap(ConstantFP::get(Type::FloatTy, RFLOAT(v)->value));
+  return llvm_value_wrap(ConstantFP::get(Type::getFloatTy(getGlobalContext()), RFLOAT(v)->value));
 #endif
 }
 
 VALUE 
 llvm_value_get_double_constant(VALUE self, VALUE v) {
 #if defined(RFLOAT_VALUE)
-  return llvm_value_wrap(ConstantFP::get(Type::DoubleTy, RFLOAT_VALUE(v)));
+  return llvm_value_wrap(ConstantFP::get(Type::getDoubleTy(getGlobalContext()), RFLOAT_VALUE(v)));
 #else
-  return llvm_value_wrap(ConstantFP::get(Type::DoubleTy, RFLOAT(v)->value));
+  return llvm_value_wrap(ConstantFP::get(Type::getDoubleTy(getGlobalContext()), RFLOAT(v)->value));
 #endif
 }
 
@@ -102,9 +104,9 @@ VALUE
 llvm_value_get_immediate_constant(VALUE self, VALUE v) {
   const IntegerType* type; 
   if(sizeof(VALUE) == 4) {
-    type = Type::Int32Ty;
+    type = Type::getInt32Ty(getGlobalContext());
   } else {
-    type = Type::Int64Ty;
+    type = Type::getInt64Ty(getGlobalContext());
   }
   return llvm_value_wrap(ConstantInt::get(type, (long)v));
 }
@@ -189,7 +191,7 @@ llvm_type_struct(VALUE self, VALUE rtypes, VALUE rpacked) {
     Data_Get_Struct(v, Type, t);
     types.push_back(t);
   }
-  StructType *s = StructType::get(types);
+  StructType *s = StructType::get(getGlobalContext(), types);
   return Data_Wrap_Struct(cLLVMStructType, NULL, NULL, s);
 }
 
@@ -240,22 +242,22 @@ llvm_type_type_id(VALUE self) {
 }
 
 void init_types() {
-  rb_define_const(cLLVMType, "Int1Ty",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::Int1Ty)));
-  rb_define_const(cLLVMType, "Int8Ty",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::Int8Ty)));
-  rb_define_const(cLLVMType, "Int16Ty", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::Int16Ty)));
-  rb_define_const(cLLVMType, "Int32Ty", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::Int32Ty)));
-  rb_define_const(cLLVMType, "Int64Ty", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::Int64Ty)));
-  rb_define_const(cLLVMType, "VoidTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::VoidTy)));
-  rb_define_const(cLLVMType, "LabelTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::LabelTy)));
-  rb_define_const(cLLVMType, "FloatTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::FloatTy)));
-  rb_define_const(cLLVMType, "DoubleTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::DoubleTy)));
+  rb_define_const(cLLVMType, "Int1Ty",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::getInt1Ty(getGlobalContext()))));
+  rb_define_const(cLLVMType, "Int8Ty",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::getInt8Ty(getGlobalContext()))));
+  rb_define_const(cLLVMType, "Int16Ty", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::getInt16Ty(getGlobalContext()))));
+  rb_define_const(cLLVMType, "Int32Ty", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::getInt32Ty(getGlobalContext()))));
+  rb_define_const(cLLVMType, "Int64Ty", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(Type::getInt64Ty(getGlobalContext()))));
+  rb_define_const(cLLVMType, "VoidTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::getVoidTy(getGlobalContext()))));
+  rb_define_const(cLLVMType, "LabelTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::getLabelTy(getGlobalContext()))));
+  rb_define_const(cLLVMType, "FloatTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::getFloatTy(getGlobalContext()))));
+  rb_define_const(cLLVMType, "DoubleTy",  Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<Type*>(Type::getDoubleTy(getGlobalContext()))));
 
   // Figure out details of the target machine
   const IntegerType *machine_word_type;
   if(sizeof(void*) == 4) {
-    machine_word_type = Type::Int32Ty;
+    machine_word_type = Type::getInt32Ty(getGlobalContext());
   } else {
-    machine_word_type = Type::Int64Ty;
+    machine_word_type = Type::getInt64Ty(getGlobalContext());
   }
   rb_define_const(cLLVMRuby, "MACHINE_WORD", Data_Wrap_Struct(cLLVMType, NULL, NULL, const_cast<IntegerType*>(machine_word_type)));
 }

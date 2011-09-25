@@ -3,7 +3,6 @@
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/System/DynamicLibrary.h"
 #include <fstream>
 #include <sstream>
 
@@ -17,7 +16,7 @@ llvm_module_allocate(VALUE klass) {
 VALUE
 llvm_module_initialize(VALUE self, VALUE rname) {
   Check_Type(rname, T_STRING);
-  DATA_PTR(self) = new Module(StringValuePtr(rname));
+  DATA_PTR(self) = new Module(StringValuePtr(rname), getGlobalContext());
   return self;
 }
 
@@ -71,9 +70,10 @@ llvm_module_global_variable(VALUE self, VALUE rtype, VALUE rinitializer) {
 VALUE
 llvm_module_inspect(VALUE self) {
   Module *m = LLVM_MODULE(self);
-  std::ostringstream strstrm;
+  std::string str;
+  raw_string_ostream strstrm(str);
   strstrm << *m;
-  return rb_str_new2(strstrm.str().c_str());
+  return rb_str_new2(str.c_str());
 }
 
 VALUE
@@ -96,7 +96,6 @@ llvm_pass_manager_run(VALUE self, VALUE module) {
   pm->add(new TargetData(m));
   pm->add(createVerifierPass());
   pm->add(createLowerSetJmpPass());
-  pm->add(createRaiseAllocationsPass());
   pm->add(createCFGSimplificationPass());
   pm->add(createPromoteMemoryToRegisterPass());
   pm->add(createGlobalOptimizerPass());
@@ -122,12 +121,9 @@ llvm_execution_engine_get(VALUE klass, VALUE module) {
 #endif
 
   Module *m = LLVM_MODULE(module);
-  ExistingModuleProvider *MP = new ExistingModuleProvider(m);
 
   if(EE == NULL) {
-    EE = ExecutionEngine::create(MP, false);
-  } else {
-    EE->addModuleProvider(MP);
+    EE = EngineBuilder(m).setEngineKind(EngineKind::JIT).create();
   }
 
   return Qtrue;
@@ -152,11 +148,12 @@ VALUE
 llvm_module_read_assembly(VALUE self, VALUE assembly) {
   Check_Type(assembly, T_STRING);
 
-  ParseError e;
+  SMDiagnostic e;
   Module *module = ParseAssemblyString(
     StringValuePtr(assembly),
     LLVM_MODULE(self),
-    &e
+    e,
+	getGlobalContext()
   );
   //TODO How do we handle errors?
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);
@@ -172,7 +169,7 @@ llvm_module_read_bitcode(VALUE self, VALUE bitcode) {
   MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING(bitcode)->ptr,RSTRING(bitcode)->ptr+RSTRING(bitcode)->len);
 #endif
 
-  Module *module = ParseBitcodeFile(buf);
+  Module *module = ParseBitcodeFile(buf, getGlobalContext());
   delete buf;
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);
 }
@@ -184,8 +181,9 @@ llvm_module_write_bitcode(VALUE self, VALUE file_name) {
 
   // Don't really know how to handle c++ streams well, 
   // dumping all into string buffer and then saving
-  std::ofstream file;
-  file.open(StringValuePtr(file_name)); 
+  std::string error;
+  raw_fd_ostream file(StringValuePtr(file_name), error);
+
   WriteBitcodeToFile(LLVM_MODULE(self), file);   // Convert value into a string.
   return Qtrue;
 }

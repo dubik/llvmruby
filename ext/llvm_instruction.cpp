@@ -17,14 +17,6 @@ llvm_instruction_wrap(Instruction* i) {
 }
 
 VALUE
-llvm_instruction_inspect(VALUE self) {
-  Instruction *i = LLVM_INSTRUCTION(self);
-  std::ostringstream strstrm;
-  strstrm << *i;
-  return rb_str_new2(strstrm.str().c_str());
-}
-
-VALUE
 llvm_instruction_get_opcode_name(VALUE self) {
   Instruction *i = LLVM_INSTRUCTION(self);
   std::string name = i->getOpcodeName();
@@ -124,6 +116,15 @@ llvm_branch_inst_set_condition(VALUE self, VALUE rv) {
   return rv;
 }
 
+VALUE
+llvm_instruction_inspect(VALUE self) {
+  Instruction *i = LLVM_INSTRUCTION(self);
+  std::string str;
+  raw_string_ostream strstrm(str);
+  strstrm << *i;
+  return rb_str_new2(str.c_str());
+}
+
 #define DATA_GET_SWITCH_INST SwitchInst *si; Data_Get_Struct(self, SwitchInst, si);
 
 VALUE
@@ -151,33 +152,6 @@ llvm_switch_inst_add_case(VALUE self, VALUE rci, VALUE rbb) {
 
   si->addCase(ci, bb);
   return self;
-}
-
-#define DATA_GET_ALLOCATION_INST AllocationInst *ai; Data_Get_Struct(self, AllocationInst, ai);
-
-VALUE 
-llvm_allocation_inst_is_array_allocation(VALUE self) {
-  DATA_GET_ALLOCATION_INST
-  return ai->isArrayAllocation() ? true : false;
-}
-
-VALUE 
-llvm_allocation_inst_array_size(VALUE self) {
-  DATA_GET_ALLOCATION_INST
-  return llvm_value_wrap(ai->getArraySize());
-}
-
-VALUE 
-llvm_allocation_inst_allocated_type(VALUE self) {
-  DATA_GET_ALLOCATION_INST
-  Type *at = const_cast<Type*>(ai->getAllocatedType()); 
-  return Data_Wrap_Struct(cLLVMType, NULL, NULL, at);
-}
-
-VALUE 
-llvm_allocation_inst_alignment(VALUE self) {
-  DATA_GET_ALLOCATION_INST
-  return INT2FIX(ai->getAlignment());
 }
 
 #define DEFINE_INST(type, name) rb_define_const(cLLVMInstruction, #name, INT2FIX(Instruction::name));

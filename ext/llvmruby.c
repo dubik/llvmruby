@@ -87,11 +87,6 @@ VALUE llvm_switch_inst_get_default_dest(VALUE);
 VALUE llvm_switch_inst_get_num_cases(VALUE);
 VALUE llvm_switch_inst_add_case(VALUE, VALUE, VALUE);
 
-VALUE llvm_allocation_inst_is_array_allocation(VALUE);
-VALUE llvm_allocation_inst_array_size(VALUE);
-VALUE llvm_allocation_inst_allocated_type(VALUE);
-VALUE llvm_allocation_inst_alignment(VALUE);
-
 VALUE llvm_builder_set_insert_point(VALUE, VALUE);
 VALUE llvm_builder_bin_op(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_phi(VALUE, VALUE);
@@ -156,6 +151,8 @@ VALUE llvm_execution_engine_run_function(int, VALUE*, VALUE);
 VALUE llvm_execution_engine_run_autoconvert(VALUE, VALUE);
 
 void Init_llvmruby() {
+  InitializeNativeTarget();
+
   cLLVMRuby = rb_define_module("LLVM");
 
   cLLVMType = rb_define_class_under(cLLVMRuby, "Type", rb_cObject);
@@ -188,7 +185,6 @@ void Init_llvmruby() {
   cLLVMFreeInst = rb_define_class_under(cLLVMRuby, "FreeInst", cLLVMUnaryInstruction);
   cLLVMGetElementPtrInst = rb_define_class_under(cLLVMRuby, "GetElementPtrInst", cLLVMInstruction);
   cLLVMAllocaInst = rb_define_class_under(cLLVMRuby, "AllocaInst", cLLVMAllocationInst);
-  cLLVMMallocInst = rb_define_class_under(cLLVMRuby, "MallocInst", cLLVMAllocationInst);
 
   cLLVMCmpInst = rb_define_class_under(cLLVMRuby, "CmpInst", cLLVMInstruction);
   cLLVMICmpInst = rb_define_class_under(cLLVMRuby, "ICmpInst", cLLVMCmpInst);
@@ -279,11 +275,6 @@ void Init_llvmruby() {
   rb_define_method(cLLVMSwitchInst, "get_num_cases", llvm_switch_inst_get_num_cases, 0);
   rb_define_method(cLLVMSwitchInst, "add_case", llvm_switch_inst_add_case, 2);
 
-  rb_define_method(cLLVMAllocationInst, "array_allocation?", llvm_allocation_inst_is_array_allocation, 0);
-  rb_define_method(cLLVMAllocationInst, "array_size", llvm_allocation_inst_array_size, 0);
-  rb_define_method(cLLVMAllocationInst, "allocated_type", llvm_allocation_inst_allocated_type, 0);
-  rb_define_method(cLLVMAllocationInst, "alignment", llvm_allocation_inst_alignment, 0);
-
   rb_define_method(cLLVMBuilder, "set_insert_point", llvm_builder_set_insert_point, 1);
   rb_define_method(cLLVMBuilder, "bin_op", llvm_builder_bin_op, 3);
   rb_define_method(cLLVMBuilder, "phi", llvm_builder_phi, 1);
@@ -293,8 +284,6 @@ void Init_llvmruby() {
   rb_define_method(cLLVMBuilder, "switch", llvm_builder_switch, 2);
   rb_define_method(cLLVMBuilder, "invoke", llvm_builder_invoke, -1);
   rb_define_method(cLLVMBuilder, "unwind", llvm_builder_unwind, 0);
-  rb_define_method(cLLVMBuilder, "malloc", llvm_builder_malloc, 2);
-  rb_define_method(cLLVMBuilder, "free", llvm_builder_free, 1);
   rb_define_method(cLLVMBuilder, "alloca", llvm_builder_alloca, 2);
   rb_define_method(cLLVMBuilder, "load", llvm_builder_load, -1);
   rb_define_method(cLLVMBuilder, "store", llvm_builder_store, -1);

@@ -108,7 +108,8 @@ llvm_builder_cond_br(VALUE self, VALUE rcond, VALUE rtrue_block, VALUE rfalse_bl
   Data_Get_Struct(rtrue_block, BasicBlock, true_block);
   Data_Get_Struct(rfalse_block, BasicBlock, false_block);
 #if defined(USE_ASSERT_CHECK)
-  if (cond->getType() != Type::Int1Ty) {
+  // TODO replace with isIntegerTy(1) - since it's boolean
+  if (!cond->getType()->isIntegerTy()) {
     rb_raise(rb_eRuntimeError, "May only branch on boolean predicates!");
   }
 #endif
@@ -156,26 +157,6 @@ llvm_builder_unwind(VALUE self) {
   DATA_GET_BUILDER
   return llvm_value_wrap(builder->CreateUnwind());
 }
-
-VALUE
-llvm_builder_malloc(VALUE self, VALUE rtype, VALUE rsize) {
-  DATA_GET_BUILDER
-
-  const Type *type;
-  Data_Get_Struct(rtype, Type, type);
-
-  Value *size = ConstantInt::get(Type::Int32Ty, FIX2INT(rsize));
-  Instruction *v = builder->CreateMalloc(type, size);
-  return llvm_instruction_wrap(v);
-}
-
-VALUE
-llvm_builder_free(VALUE self, VALUE rptr) {
-   DATA_GET_BUILDER
-   Value *v = LLVM_VAL(rptr);
-   Instruction *free_inst = builder->CreateFree(v);
-   return llvm_instruction_wrap(free_inst);
-}
   
 VALUE 
 llvm_builder_alloca(VALUE self, VALUE rtype, VALUE rsize) {
@@ -184,7 +165,7 @@ llvm_builder_alloca(VALUE self, VALUE rtype, VALUE rsize) {
   const Type* type;
   Data_Get_Struct(rtype, Type, type);
 
-  Value *size = ConstantInt::get(Type::Int32Ty, FIX2INT(rsize));
+  Value *size = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), FIX2INT(rsize));
   Instruction *v = builder->CreateAlloca(type, size);
   return Data_Wrap_Struct(cLLVMAllocationInst, NULL, NULL, v);
 }
@@ -335,7 +316,7 @@ llvm_builder_extract_element(VALUE self, VALUE rv, VALUE ridx) {
 
 VALUE
 llvm_builder_get_global(VALUE self) {
-  GlobalVariable *g = new GlobalVariable(Type::Int64Ty, false, GlobalValue::ExternalLinkage, 0, "shakalaka");
+  GlobalVariable *g = new GlobalVariable(Type::getInt64Ty(getGlobalContext()), false, GlobalValue::ExternalLinkage, 0, "shakalaka");
   return llvm_value_wrap(g);
 }
 
