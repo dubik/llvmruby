@@ -280,25 +280,6 @@ class BasicTests < Test::Unit::TestCase
     assert_kind_of(Value, gv)
   end
 
-  def test_malloc_free
-    function_tester(23) do |f|
-      b = f.create_block.builder
-      new_space = b.malloc(MACHINE_WORD, 1)
-      assert_kind_of(AllocationInst, new_space)
-      assert(!new_space.array_allocation?)
-      assert_kind_of(Value, new_space.array_size)
-      assert_kind_of(Type, new_space.allocated_type)
-      assert_equal(0, new_space.alignment)
-
-      store_inst = b.store(23.llvm(MACHINE_WORD), new_space)    
-      assert(store_inst.may_write_to_memory?)
-      v = b.load(new_space)
-      free_inst = b.free(new_space)
-      assert_kind_of(FreeInst, free_inst)
-      b.return(v)
-    end
-  end
-
   def test_cast
     function_tester(5) do |f|
       b = f.create_block.builder
