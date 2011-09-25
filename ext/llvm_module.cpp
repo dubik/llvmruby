@@ -3,8 +3,12 @@
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Target/TargetSelect.h"
+
 #include <fstream>
 #include <sstream>
+#include <iostream>
+using namespace std;
 
 extern "C" {
 
@@ -44,7 +48,9 @@ VALUE
 llvm_module_get_function(VALUE self, VALUE name) {
   Check_Type(name, T_STRING);
   Module *m = LLVM_MODULE(self);
-  Function *f = m->getFunction(StringValuePtr(name));
+  Function *f = NULL;
+  if(m)
+	f = m->getFunction(StringValuePtr(name));
   return llvm_function_wrap(f);  
 }
 
@@ -70,6 +76,9 @@ llvm_module_global_variable(VALUE self, VALUE rtype, VALUE rinitializer) {
 VALUE
 llvm_module_inspect(VALUE self) {
   Module *m = LLVM_MODULE(self);
+  if(!m)
+	return rb_str_new2("Module is null");
+	
   std::string str;
   raw_string_ostream strstrm(str);
   strstrm << *m;
@@ -121,9 +130,15 @@ llvm_execution_engine_get(VALUE klass, VALUE module) {
 #endif
 
   Module *m = LLVM_MODULE(module);
-
+  
   if(EE == NULL) {
-    EE = EngineBuilder(m).setEngineKind(EngineKind::JIT).create();
+	InitializeNativeTarget();
+	LLVMLinkInJIT(); // Forcing linking to JIT
+	string errStr;
+    EE = EngineBuilder(m).setErrorStr(&errStr).setEngineKind(EngineKind::JIT).create();
+    if(!errStr.empty()) {
+      cerr << "ExecutionEngine.get - Error: " << errStr << endl;
+    }
   }
 
   return Qtrue;
@@ -149,9 +164,11 @@ llvm_module_read_assembly(VALUE self, VALUE assembly) {
   Check_Type(assembly, T_STRING);
 
   SMDiagnostic e;
+  const char * asmString = StringValuePtr(assembly);
+
   Module *module = ParseAssemblyString(
-    StringValuePtr(assembly),
-    LLVM_MODULE(self),
+    asmString,
+    0,
     e,
 	getGlobalContext()
   );

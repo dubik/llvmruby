@@ -15,7 +15,6 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/IRBuilder.h"
 #include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/TargetSelect.h"
 #include "llvm/LLVMContext.h"
 
 #include <iostream>

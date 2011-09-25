@@ -38,6 +38,9 @@ VALUE
 llvm_function_get_basic_block_list(VALUE self) {
   Function *f = LLVM_FUNCTION(self);
   VALUE bb_array = rb_ary_new();
+  if(!f)
+	return bb_array;
+	
   Function::iterator bbs = f->begin();
   while(bbs != f->end()) {
     BasicBlock *bb = bbs++;

@@ -151,8 +151,6 @@ VALUE llvm_execution_engine_run_function(int, VALUE*, VALUE);
 VALUE llvm_execution_engine_run_autoconvert(VALUE, VALUE);
 
 void Init_llvmruby() {
-  InitializeNativeTarget();
-
   cLLVMRuby = rb_define_module("LLVM");
 
   cLLVMType = rb_define_class_under(cLLVMRuby, "Type", rb_cObject);
