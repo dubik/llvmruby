@@ -1,3 +1,4 @@
+test/foo.bc
 Makefile
 llvmruby.so
 mkmf.log
