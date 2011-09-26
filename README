@@ -9,12 +9,10 @@ interact with the native Ruby 1.8/1.9 data types.
 
 * How to build
 
-Get LLVM 2.4 from http://llvm.org/releases/2.4/llvm-2.4.tar.gz and 
+Get LLVM 2.9 from http://llvm.org/releases/2.9/llvm-2.9.tgz and
 build it separately following their instructions.
 
-Make sure that you configure LLVM with PIC enabled:
-  
-  $ ./configure --enable-pic
+  $ ./configure
 
 Add the llvm bin directory to your path, extconf needs to be able to find llvm-conf:
 
