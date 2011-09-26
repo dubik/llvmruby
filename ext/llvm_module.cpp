@@ -193,13 +193,19 @@ llvm_module_read_bitcode(VALUE self, VALUE bitcode) {
   Check_Type(bitcode, T_STRING);
 
 #if defined(RSTRING_PTR)
-  MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING_PTR(bitcode),RSTRING_PTR(bitcode)+RSTRING_LEN(bitcode));  
+  OwningPtr<MemoryBuffer> buf(MemoryBuffer::getMemBufferCopy(StringRef(RSTRING_PTR(bitcode), RSTRING_LEN(bitcode))));
 #else
-  MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING(bitcode)->ptr,RSTRING(bitcode)->ptr+RSTRING(bitcode)->len);
+  OwningPtr<MemoryBuffer> buf(MemoryBuffer::getMemBufferCopy(StringRef(RSTRING(bitcode)->ptr, RSTRING(bitcode)->len)));
 #endif
 
-  Module *module = ParseBitcodeFile(buf, getGlobalContext());
-  delete buf;
+  string err;
+  Module *module = ParseBitcodeFile(buf.take(), getGlobalContext(), &err);
+
+  if(!module) {
+    VALUE exception = rb_exc_new2(rb_eSyntaxError, err.c_str());
+    rb_exc_raise(exception);
+  }
+
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);
 }
 
