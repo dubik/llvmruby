@@ -39,6 +39,7 @@ extern VALUE cLLVMFunctionType;
 extern VALUE cLLVMInstruction;
 extern VALUE cLLVMBinaryOperator;
 extern VALUE cLLVMAllocationInst;
+extern VALUE cLLVMAssemblySyntaxError;
 
 #define HANDLE_TERM_INST(Num, Opcode, Klass) extern VALUE cLLVM##Klass;
 #define HANDLE_MEMORY_INST(Num, Opcode, Klass) extern VALUE cLLVM##Klass;

@@ -7,26 +7,25 @@ class ValueTests < Test::Unit::TestCase
 
   def setup
     @assembly=<<-EOF
-    ; ModuleID = 'constants.o'
-    target datalayout = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:32:64-f32:32:32-f64:32:64-v64:64:64-v128:128:128-a0:0:64-f80:128:128"
-    target triple = "i386-apple-darwin9"
-    @CONST_PI = constant float 0x400921FA00000000		; <float*> [#uses=0]
+    ; ModuleID = '/tmp/webcompile/_14635_0.bc'
+    target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64"
+    target triple = "x86_64-unknown-linux-gnu"
 
-    define float @circle_area(float %radius) nounwind {
-    entry:
-    	%tmp2 = mul float %radius, 0x400921FA00000000		; <float> [#uses=1]
-    	%tmp4 = mul float %tmp2, %radius		; <float> [#uses=1]
-    	ret float %tmp4
+    @CONST_PI = constant float 0x400921FA00000000, align 4
+
+    define float @circle_area(float %radius) nounwind readnone {
+      %1 = fmul float %radius, 0x400921FA00000000
+      %2 = fmul float %1, %radius
+      ret float %2
     }
 
-    define i32 @add_42(i32 %x) nounwind {
-    entry:
-    	%tmp2 = add i32 %x, 42		; <i32> [#uses=1]
-    	ret i32 %tmp2
+    define i32 @add_42(i32 %x) nounwind readnone {
+      %1 = add nsw i32 %x, 42
+      ret i32 %1
     }
     EOF
 
-     @m = LLVM::Module.read_assembly(@assembly)
+    @m = LLVM::Module.read_assembly(@assembly)
   end
 
   def test_check_value_is_constant

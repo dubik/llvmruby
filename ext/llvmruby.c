@@ -27,6 +27,7 @@ VALUE cLLVMPhi = Qnil;
 VALUE cLLVMBinaryOps = Qnil;
 VALUE cLLVMPassManager = Qnil;
 VALUE cLLVMExecutionEngine = Qnil;
+VALUE cLLVMAssemblySyntaxError = Qnil;
 
 #define HANDLE_TERM_INST(Num, Opcode, Klass) VALUE cLLVM##Klass;
 #define HANDLE_MEMORY_INST(Num, Opcode, Klass) VALUE cLLVM##Klass;
@@ -192,6 +193,8 @@ void Init_llvmruby() {
   cLLVMPassManager = rb_define_class_under(cLLVMRuby, "PassManager", rb_cObject);
   cLLVMExecutionEngine = rb_define_class_under(cLLVMRuby, "ExecutionEngine", rb_cObject);
 
+  cLLVMAssemblySyntaxError = rb_define_class_under(cLLVMRuby, "AssemblySyntaxError", rb_eSyntaxError);
+
   init_types();
   rb_define_module_function(cLLVMType, "pointer", llvm_type_pointer, 1);
   rb_define_module_function(cLLVMType, "struct", llvm_type_struct, 1);
@@ -307,6 +310,11 @@ void Init_llvmruby() {
   rb_define_module_function(cLLVMExecutionEngine, "get", llvm_execution_engine_get, 1);
   rb_define_module_function(cLLVMExecutionEngine, "run_function", llvm_execution_engine_run_function, -1);
   rb_define_module_function(cLLVMExecutionEngine, "run_autoconvert", llvm_execution_engine_run_autoconvert, 1);
+
+  rb_define_attr(cLLVMAssemblySyntaxError, "line", 1, 0);
+  rb_define_attr(cLLVMAssemblySyntaxError, "column", 1, 0);
+  rb_define_attr(cLLVMAssemblySyntaxError, "line_contents", 1, 0);
+  rb_define_attr(cLLVMAssemblySyntaxError, "filename", 1, 0);
 
   /*
   printf("sizeof long: %d\n", (int)sizeof(long));

@@ -48,10 +48,13 @@ VALUE
 llvm_module_get_function(VALUE self, VALUE name) {
   Check_Type(name, T_STRING);
   Module *m = LLVM_MODULE(self);
+
   Function *f = NULL;
+
   if(m)
-	f = m->getFunction(StringValuePtr(name));
-  return llvm_function_wrap(f);  
+    f = m->getFunction(StringValuePtr(name));
+
+  return llvm_function_wrap(f);
 }
 
 VALUE
@@ -163,16 +166,25 @@ VALUE
 llvm_module_read_assembly(VALUE self, VALUE assembly) {
   Check_Type(assembly, T_STRING);
 
-  SMDiagnostic e;
   const char * asmString = StringValuePtr(assembly);
 
+  SMDiagnostic e;
   Module *module = ParseAssemblyString(
     asmString,
     0,
     e,
-	getGlobalContext()
+    getGlobalContext()
   );
-  //TODO How do we handle errors?
+
+  if(!module) {
+    VALUE exception = rb_exc_new2(cLLVMAssemblySyntaxError, e.getMessage().c_str());
+    rb_iv_set(exception, "@line", INT2NUM(e.getLineNo()));
+    rb_iv_set(exception, "@column", INT2NUM(e.getColumnNo()));
+    rb_iv_set(exception, "@line_contents", rb_str_new2(e.getLineContents().c_str()));
+    rb_iv_set(exception, "@filename", rb_str_new2(""));
+    rb_exc_raise(exception);
+  }
+
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);
 }
 
