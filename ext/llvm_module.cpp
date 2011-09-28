@@ -4,6 +4,7 @@
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Target/TargetSelect.h"
+#include "llvm/Function.h"
 
 #include <fstream>
 #include <sstream>
@@ -223,25 +224,77 @@ llvm_module_write_bitcode(VALUE self, VALUE file_name) {
   return Qtrue;
 }
 
+GenericValue
+Val2GV(const VALUE& val, const Type * targetType) {
+  GenericValue gv;
+  switch(targetType->getTypeID()) {
+    case Type::VoidTyID:
+      cout << "This is void!" << endl;
+      break;
+    case Type::FloatTyID:
+      gv.FloatVal = NUM2DBL(val);
+      break;
+    case Type::DoubleTyID:
+      gv.DoubleVal = NUM2DBL(val);
+      break;
+    case Type::IntegerTyID:
+      gv.IntVal = APInt(sizeof(long)*8, NUM2LONG(val), true);
+      break;
+    case Type::PointerTyID:
+      cout << "This is pointer not supported!" << endl;
+      //break;
+    default:
+      rb_raise(rb_eArgError, "Can't convert VALUE into GenericValue");
+      break;
+  };
+  
+  return gv;
+}
+
+VALUE
+Gv2Val(const GenericValue& gv, const Type * targetType) {
+  if(targetType->getTypeID() == Type::FloatTyID) {
+    return rb_float_new(gv.FloatVal);
+  } else if(targetType->getTypeID() == Type::DoubleTyID) {
+    return rb_float_new(gv.DoubleVal);    
+  } else if(targetType->getTypeID() == Type::IntegerTyID) {
+    return INT2NUM(gv.IntVal.getSExtValue());
+  }
+
+  return LONG2NUM(-1);
+}
+
 VALUE
 llvm_execution_engine_run_function(int argc, VALUE *argv, VALUE klass) {
-  if(argc < 1) { rb_raise(rb_eArgError, "Expected at least one argument"); }
+  if(argc < 1) { rb_raise(rb_eArgError, "Expected at least one argument - function name"); }
   CHECK_TYPE(argv[0], cLLVMFunction);
   Function *func = LLVM_FUNCTION(argv[0]);
+  char errorMessage[128];
 
-  // Using run function is much slower than getting C function pointer
-  // and calling that, but it lets us pass in arbitrary numbers of
-  // arguments easily for now, which is nice
+  const Function::ArgumentListType& nativeArguments(func->getArgumentList());
+
+  if(argc - 1 != nativeArguments.size()){
+    sprintf(errorMessage, "Function expects %zu arguments, but found: %d", nativeArguments.size(), argc - 1 );
+    rb_raise(rb_eArgError, errorMessage);
+  }
+
   std::vector<GenericValue> arg_values;
-  for(int i = 1; i < argc; ++i) {
-    GenericValue arg_val;
-    arg_val.IntVal = APInt(sizeof(long)*8, argv[i]);
-    arg_values.push_back(arg_val);
+  int argvIndex = 1;
+
+  for(Function::const_arg_iterator iter = nativeArguments.begin(); iter != nativeArguments.end(); iter++) {
+    const Type * type = (*iter).getType();
+    GenericValue arg;
+    VALUE &rb_argument = argv[argvIndex];
+    arg = Val2GV(rb_argument, type);
+    arg_values.push_back(arg);
+    argvIndex++;
   }
 
   GenericValue v = EE->runFunction(func, arg_values);
-  VALUE val = v.IntVal.getZExtValue();
-  return val;
+  
+  const Type * retType = func->getReturnType();
+
+  return Gv2Val(v, retType);
 }
 
 /* For tests: assume no args, return uncoverted int and turn it into fixnum */

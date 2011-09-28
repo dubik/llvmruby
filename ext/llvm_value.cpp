@@ -67,7 +67,7 @@ llvm_value_replace_all_uses_with(VALUE self, VALUE rv2) {
 
 VALUE 
 llvm_value_get_constant(VALUE self, VALUE type, VALUE v) {
-  return llvm_value_wrap(ConstantInt::get(LLVM_TYPE(type), FIX2INT(v)));
+  return llvm_value_wrap(ConstantInt::get(LLVM_TYPE(type), NUM2LONG(v)));
 }
 
 VALUE 

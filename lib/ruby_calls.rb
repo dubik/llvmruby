@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'llvm'
 include LLVM
 include RubyInternals
@@ -98,6 +99,7 @@ add1 = f
 
 ret = ExecutionEngine.run_function(add1, [1,2,3,4,5])
 puts "add1: #{ret.inspect}"
+puts m.inspect
 
 # Add 1 to every array element (in place)
 type = ftype(VALUE, [VALUE])
@@ -138,3 +140,4 @@ reverse = f
 
 ret = ExecutionEngine.run_function(reverse, [1,2,3,4,5])
 puts "reverse: #{ret.inspect}"
+puts m.inspect
