@@ -241,8 +241,24 @@ Val2GV(const VALUE& val, const Type * targetType) {
       gv.IntVal = APInt(sizeof(long)*8, NUM2LONG(val), true);
       break;
     case Type::PointerTyID:
-      cout << "This is pointer not supported!" << endl;
-      //break;
+      if(TYPE(val) == T_STRING) {
+        gv.PointerVal = RSTRING(val);
+      } else if(TYPE(val) == T_STRUCT) {
+        gv.PointerVal = RSTRUCT(val);
+      } else if(TYPE(val) == T_ARRAY) {
+        gv.PointerVal = RARRAY(val);
+      } else if(TYPE(val) == T_HASH) {
+        gv.PointerVal = RHASH(val);
+      } else if(TYPE(val) == T_CLASS) {
+        gv.PointerVal = RCLASS(val);
+      } else if(TYPE(val) == T_OBJECT) {
+        gv.PointerVal = ROBJECT(val);
+      } else if(TYPE(val) == T_DATA) {
+        gv.PointerVal = RDATA(val);
+      } else {
+        rb_raise(rb_eArgError, "Can't convert pointer into GenericValue. That type is not supported.");
+      }
+      break;
     default:
       rb_raise(rb_eArgError, "Can't convert VALUE into GenericValue");
       break;
@@ -256,7 +272,7 @@ Gv2Val(const GenericValue& gv, const Type * targetType) {
   if(targetType->getTypeID() == Type::FloatTyID) {
     return rb_float_new(gv.FloatVal);
   } else if(targetType->getTypeID() == Type::DoubleTyID) {
-    return rb_float_new(gv.DoubleVal);    
+    return rb_float_new(gv.DoubleVal);
   } else if(targetType->getTypeID() == Type::IntegerTyID) {
     return INT2NUM(gv.IntVal.getSExtValue());
   }
@@ -291,7 +307,7 @@ llvm_execution_engine_run_function(int argc, VALUE *argv, VALUE klass) {
   }
 
   GenericValue v = EE->runFunction(func, arg_values);
-  
+
   const Type * retType = func->getReturnType();
 
   return Gv2Val(v, retType);
