@@ -227,6 +227,7 @@ llvm_module_write_bitcode(VALUE self, VALUE file_name) {
 GenericValue
 Val2GV(const VALUE& val, const Type * targetType) {
   GenericValue gv;
+
   switch(targetType->getTypeID()) {
     case Type::VoidTyID:
       cout << "This is void!" << endl;
@@ -238,7 +239,11 @@ Val2GV(const VALUE& val, const Type * targetType) {
       gv.DoubleVal = NUM2DBL(val);
       break;
     case Type::IntegerTyID:
-      gv.IntVal = APInt(sizeof(long)*8, NUM2LONG(val), true);
+      if(TYPE(val) != T_TRUE && TYPE(val) != T_FALSE) {
+        gv.IntVal = APInt(sizeof(long)*8, NUM2LONG(val), true);
+      } else {
+        gv.IntVal = (TYPE(val) == T_TRUE);
+      }
       break;
     case Type::PointerTyID:
       if(TYPE(val) == T_STRING) {

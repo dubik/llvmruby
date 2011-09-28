@@ -95,8 +95,13 @@ class MyOwnTests < Test::Unit::TestCase
     function = mainModule.get_function("len")
     ExecutionEngine.get(mainModule)
     ["h", "he", "hel"].each {|test_str|
-      assert_equal test_str.length, ExecutionEngine.run_function(function, "hell")
+      assert_equal test_str.length, ExecutionEngine.run_function(function, test_str)
     }
+  end
 
+  def test_bool
+    function = create_function(Type::Int8Ty)
+    assert_equal 1, ExecutionEngine.run_function(function, true)
+    assert_equal 0, ExecutionEngine.run_function(function, false)
   end
 end
