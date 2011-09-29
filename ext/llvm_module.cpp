@@ -264,6 +264,8 @@ Val2GV(const VALUE& val, const Type * targetType) {
         gv.PointerVal = ROBJECT(val);
       } else if(TYPE(val) == T_DATA) {
         gv.PointerVal = RDATA(val);
+      } else if(TYPE(val) == T_NIL){
+        gv.PointerVal = 0;
       } else {
         rb_raise(rb_eArgError, "Can't convert pointer into GenericValue. That type is not supported.");
       }
@@ -284,6 +286,8 @@ Gv2Val(const GenericValue& gv, const Type * targetType) {
     return rb_float_new(gv.DoubleVal);
   } else if(targetType->getTypeID() == Type::IntegerTyID) {
     return INT2NUM(gv.IntVal.getSExtValue());
+  } else if(targetType->getTypeID() == Type::PointerTyID) {
+    return LONG2NUM(gv.IntVal.getZExtValue());
   }
 
   return LONG2NUM(-1);

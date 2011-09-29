@@ -109,4 +109,9 @@ class MyOwnTests < Test::Unit::TestCase
     function = create_function(Type::MACHINE_WORD)
     assert_equal 0, ExecutionEngine.run_function(function, nil)
   end
+  
+  def test_pointer_nil
+    function = create_function(Type.pointer(Type::Int8Ty))
+    assert_equal 0, ExecutionEngine.run_function(function, nil)
+  end
 end
