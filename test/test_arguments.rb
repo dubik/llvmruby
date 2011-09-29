@@ -4,7 +4,7 @@ require 'llvm'
 
 include LLVM
 
-class MyOwnTests < Test::Unit::TestCase
+class ArgumentsTest < Test::Unit::TestCase
   def create_function(type)
     #
     #  type circle_area(type k)

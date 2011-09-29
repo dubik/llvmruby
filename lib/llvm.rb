@@ -39,9 +39,10 @@ module LLVM
         bin_op(Instruction.const_get(op), x, y)
       end
     end
-    
-    bin_ops = ['Add', 'Sub', 'Mul', 'UDiv', 'SDiv', 'FDiv', 'URem', 'SRem', 'FRem']
+
+    bin_ops = ['Add', 'FAdd' ,'Sub', 'FSub', 'Mul', 'FMul', 'UDiv', 'SDiv', 'FDiv', 'URem', 'SRem', 'FRem']
     bin_ops += ['Shl', 'LShr', 'AShr', 'And', 'Or', 'Xor']
+
     bin_ops.each {|op| add_bin_op(op)}
 
     Instruction.constants.grep(/^ICMP_/) do |pred|
