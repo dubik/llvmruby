@@ -3,8 +3,7 @@ require 'rake/testtask'
 desc "Run the tests"
 Rake::TestTask.new(:test) do |t|
   t.libs << 'ext'
-  # t.test_files = FileList['test/test*.rb']
-  t.test_files = FileList['test/test_my_own.rb']
+  t.test_files = FileList['test/test*.rb']
   t.warning = true
 end
 

@@ -26,7 +26,7 @@ class MyOwnTests < Test::Unit::TestCase
     function = create_function(Type::Int64Ty)
     # TODO add max ints
     [0, 1, 1000, -1, -1000].each {|test_num|
-      assert_equal test_num, ExecutionEngine.run_function(function, test_num)
+      assert_equal test_num, ExecutionEngine.run_function_auto_args(function, test_num)
     }
   end
 
@@ -34,21 +34,21 @@ class MyOwnTests < Test::Unit::TestCase
     function = create_function(Type::Int32Ty)
     # TODO add max ints
     [0, 5, 134, -5, -134].each {|test_num|
-      assert_equal test_num, ExecutionEngine.run_function(function, test_num)
+      assert_equal test_num, ExecutionEngine.run_function_auto_args(function, test_num)
     }
   end
 
   def test_float
     function = create_function(Type::FloatTy)
     [0.0, 0.1, 0.5, 100.4, -0.1, -0.5, -100.4].each {|test_num|
-      assert_in_delta test_num, ExecutionEngine.run_function(function, test_num), 0.00001
+      assert_in_delta test_num, ExecutionEngine.run_function_auto_args(function, test_num), 0.00001
     }
   end
 
   def test_double
     function = create_function(Type::DoubleTy)
     [0.0, 0.1, 0.5, 100.4, -0.1, -0.5, -100.4].each {|test_num|
-      assert_equal test_num, ExecutionEngine.run_function(function, test_num)
+      assert_equal test_num, ExecutionEngine.run_function_auto_args(function, test_num)
     }
   end
 
@@ -95,23 +95,23 @@ class MyOwnTests < Test::Unit::TestCase
     function = mainModule.get_function("len")
     ExecutionEngine.get(mainModule)
     ["h", "he", "hel"].each {|test_str|
-      assert_equal test_str.length, ExecutionEngine.run_function(function, test_str)
+      assert_equal test_str.length, ExecutionEngine.run_function_auto_args(function, test_str)
     }
   end
 
   def test_bool
     function = create_function(Type::Int8Ty)
-    assert_equal 1, ExecutionEngine.run_function(function, true)
-    assert_equal 0, ExecutionEngine.run_function(function, false)
+    assert_equal 1, ExecutionEngine.run_function_auto_args(function, true)
+    assert_equal 0, ExecutionEngine.run_function_auto_args(function, false)
   end
 
   def test_nil
     function = create_function(Type::MACHINE_WORD)
-    assert_equal 0, ExecutionEngine.run_function(function, nil)
+    assert_equal 0, ExecutionEngine.run_function_auto_args(function, nil)
   end
   
   def test_pointer_nil
     function = create_function(Type.pointer(Type::Int8Ty))
-    assert_equal 0, ExecutionEngine.run_function(function, nil)
+    assert_equal 0, ExecutionEngine.run_function_auto_args(function, nil)
   end
 end

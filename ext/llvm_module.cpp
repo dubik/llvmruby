@@ -294,7 +294,7 @@ Gv2Val(const GenericValue& gv, const Type * targetType) {
 }
 
 VALUE
-llvm_execution_engine_run_function(int argc, VALUE *argv, VALUE klass) {
+llvm_execution_engine_run_function_auto_args(int argc, VALUE *argv, VALUE klass) {
   if(argc < 1) { rb_raise(rb_eArgError, "Expected at least one argument - function name"); }
   CHECK_TYPE(argv[0], cLLVMFunction);
   Function *func = LLVM_FUNCTION(argv[0]);
@@ -324,6 +324,27 @@ llvm_execution_engine_run_function(int argc, VALUE *argv, VALUE klass) {
   const Type * retType = func->getReturnType();
 
   return Gv2Val(v, retType);
+}
+
+VALUE
+llvm_execution_engine_run_function(int argc, VALUE *argv, VALUE klass) {
+  if(argc < 1) { rb_raise(rb_eArgError, "Expected at least one argument"); }
+  CHECK_TYPE(argv[0], cLLVMFunction);
+  Function *func = LLVM_FUNCTION(argv[0]);
+
+  // Using run function is much slower than getting C function pointer
+  // and calling that, but it lets us pass in arbitrary numbers of
+  // arguments easily for now, which is nice
+  std::vector<GenericValue> arg_values;
+  for(int i = 1; i < argc; ++i) {
+    GenericValue arg_val;
+    arg_val.IntVal = APInt(sizeof(long)*8, argv[i]);
+    arg_values.push_back(arg_val);
+  }
+
+  GenericValue v = EE->runFunction(func, arg_values);
+  VALUE val = v.IntVal.getZExtValue();
+  return val;
 }
 
 /* For tests: assume no args, return uncoverted int and turn it into fixnum */

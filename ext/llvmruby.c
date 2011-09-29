@@ -150,6 +150,7 @@ VALUE llvm_pass_manager_run(VALUE, VALUE);
 VALUE llvm_execution_engine_get(VALUE, VALUE);
 VALUE llvm_execution_engine_run_function(int, VALUE*, VALUE);
 VALUE llvm_execution_engine_run_autoconvert(VALUE, VALUE);
+VALUE llvm_execution_engine_run_function_auto_args(int, VALUE*, VALUE);
 
 void Init_llvmruby() {
   cLLVMRuby = rb_define_module("LLVM");
@@ -310,6 +311,8 @@ void Init_llvmruby() {
   rb_define_module_function(cLLVMExecutionEngine, "get", llvm_execution_engine_get, 1);
   rb_define_module_function(cLLVMExecutionEngine, "run_function", llvm_execution_engine_run_function, -1);
   rb_define_module_function(cLLVMExecutionEngine, "run_autoconvert", llvm_execution_engine_run_autoconvert, 1);
+  rb_define_module_function(cLLVMExecutionEngine, "run_function_auto_args", llvm_execution_engine_run_function_auto_args, -1);
+
 
   rb_define_attr(cLLVMAssemblySyntaxError, "line", 1, 0);
   rb_define_attr(cLLVMAssemblySyntaxError, "column", 1, 0);

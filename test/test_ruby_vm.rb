@@ -1,4 +1,5 @@
 require 'test/unit'
+$:.unshift File.dirname(__FILE__) + "/../ext"
 require 'llvm'
 require 'ruby_vm'
 
