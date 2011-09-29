@@ -1,3 +1,6 @@
+#ifndef LLVM_RUBY_H__
+#define LLVM_RUBY_H__
+
 #define __STDC_LIMIT_MACROS
 #define __STDC_CONSTANT_MACROS
 
@@ -78,3 +81,5 @@ VALUE llvm_basic_block_wrap(BasicBlock*);
 VALUE llvm_function_create_block(VALUE);
 VALUE llvm_instruction_wrap(Instruction*);
 }
+
+#endif // LLVM_RUBY_H__
