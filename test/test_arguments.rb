@@ -104,4 +104,9 @@ class MyOwnTests < Test::Unit::TestCase
     assert_equal 1, ExecutionEngine.run_function(function, true)
     assert_equal 0, ExecutionEngine.run_function(function, false)
   end
+
+  def test_nil
+    function = create_function(Type::MACHINE_WORD)
+    assert_equal 0, ExecutionEngine.run_function(function, nil)
+  end
 end

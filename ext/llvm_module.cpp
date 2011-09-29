@@ -240,7 +240,11 @@ Val2GV(const VALUE& val, const Type * targetType) {
       break;
     case Type::IntegerTyID:
       if(TYPE(val) != T_TRUE && TYPE(val) != T_FALSE) {
-        gv.IntVal = APInt(sizeof(long)*8, NUM2LONG(val), true);
+        if(TYPE(val) != T_NIL) {
+          gv.IntVal = APInt(sizeof(long)*8, NUM2LONG(val), true);
+        } else {
+          gv.IntVal = APInt(sizeof(long)*8, 0);
+        }
       } else {
         gv.IntVal = (TYPE(val) == T_TRUE);
       }
